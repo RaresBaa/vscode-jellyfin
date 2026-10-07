@@ -1,0 +1,207 @@
+{
+  "name": "vscode-jellyfin",
+  "displayName": "Jellyfin",
+  "description": "A small Jellyfin media client docked inside VS Code, with play/pause/show/hide shortcuts.",
+  "version": "0.0.1",
+  "publisher": "local",
+  "private": true,
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "extensionKind": [
+    "ui",
+    "workspace"
+  ],
+  "main": "./out/extension.js",
+  "activationEvents": [],
+  "contributes": {
+    "views": {
+      "jellyfin": [
+        {
+          "id": "jellyfin.browseView",
+          "name": "Library",
+          "type": "webview"
+        }
+      ],
+      "explorer": [
+        {
+          "id": "jellyfin.playerView",
+          "name": "Jellyfin",
+          "type": "webview",
+          "icon": "media/icon.svg",
+          "contextualTitle": "Jellyfin",
+          "when": "!jellyfin.hidden"
+        }
+      ]
+    },
+    "commands": [
+      {
+        "command": "jellyfin.signIn",
+        "title": "Jellyfin: Sign In"
+      },
+      {
+        "command": "jellyfin.signOut",
+        "title": "Jellyfin: Sign Out"
+      },
+      {
+        "command": "jellyfin.show",
+        "title": "Jellyfin: Show Player"
+      },
+      {
+        "command": "jellyfin.hide",
+        "title": "Jellyfin: Hide Player"
+      },
+      {
+        "command": "jellyfin.toggle",
+        "title": "Jellyfin: Toggle Player"
+      },
+      {
+        "command": "jellyfin.playPause",
+        "title": "Jellyfin: Play/Pause"
+      },
+      {
+        "command": "jellyfin.stop",
+        "title": "Jellyfin: Stop"
+      },
+      {
+        "command": "jellyfin.refresh",
+        "title": "Jellyfin: Refresh",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "jellyfin.openLibrary",
+        "title": "Jellyfin: Open Library",
+        "icon": "$(library)"
+      },
+      {
+        "command": "jellyfin.account",
+        "title": "Jellyfin: Account (Switch User, Change Server, Sign Out)",
+        "icon": "$(account)"
+      },
+      {
+        "command": "jellyfin.selectAudio",
+        "title": "Jellyfin: Select Audio Track"
+      },
+      {
+        "command": "jellyfin.selectSubtitles",
+        "title": "Jellyfin: Select Subtitles"
+      },
+      {
+        "command": "jellyfin.switchUser",
+        "title": "Jellyfin: Switch User"
+      },
+      {
+        "command": "jellyfin.changeServer",
+        "title": "Jellyfin: Change Server"
+      }
+    ],
+    "keybindings": [
+      {
+        "command": "jellyfin.show",
+        "key": "ctrl+alt+j s"
+      },
+      {
+        "command": "jellyfin.hide",
+        "key": "ctrl+alt+j h"
+      },
+      {
+        "command": "jellyfin.toggle",
+        "key": "ctrl+alt+j j"
+      },
+      {
+        "command": "jellyfin.playPause",
+        "key": "ctrl+alt+j space"
+      },
+      {
+        "command": "jellyfin.stop",
+        "key": "ctrl+alt+j x"
+      },
+      {
+        "command": "jellyfin.openLibrary",
+        "key": "ctrl+alt+j l"
+      },
+      {
+        "command": "jellyfin.selectAudio",
+        "key": "ctrl+alt+j a"
+      },
+      {
+        "command": "jellyfin.selectSubtitles",
+        "key": "ctrl+alt+j c"
+      }
+    ],
+    "configuration": {
+      "title": "Jellyfin",
+      "properties": {
+        "jellyfin.serverUrl": {
+          "type": "string",
+          "default": "",
+          "description": "URL of your Jellyfin server, e.g. http://192.168.1.10:8096"
+        },
+        "jellyfin.username": {
+          "type": "string",
+          "default": "",
+          "description": "Jellyfin username. Password is requested on sign-in and stored securely, never in settings."
+        }
+      }
+    },
+    "menus": {
+      "view/title": [
+        {
+          "command": "jellyfin.refresh",
+          "when": "view == jellyfin.browseView && jellyfin.signedIn",
+          "group": "navigation@1"
+        },
+        {
+          "command": "jellyfin.openLibrary",
+          "when": "view == jellyfin.playerView",
+          "group": "navigation@1"
+        },
+        {
+          "command": "jellyfin.selectAudio",
+          "when": "view == jellyfin.playerView",
+          "group": "1_tracks@1"
+        },
+        {
+          "command": "jellyfin.selectSubtitles",
+          "when": "view == jellyfin.playerView",
+          "group": "1_tracks@2"
+        },
+        {
+          "command": "jellyfin.stop",
+          "when": "view == jellyfin.playerView",
+          "group": "1_tracks@3"
+        },
+        {
+          "command": "jellyfin.hide",
+          "when": "view == jellyfin.playerView",
+          "group": "2_view"
+        }
+      ]
+    },
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "jellyfin",
+          "title": "Jellyfin",
+          "icon": "media/icon.svg"
+        }
+      ]
+    }
+  },
+  "scripts": {
+    "compile": "node esbuild.js",
+    "watch": "node esbuild.js --watch",
+    "check-types": "tsc --noEmit",
+    "package": "node esbuild.js --production",
+    "vscode:prepublish": "npm run package"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/vscode": "^1.85.0",
+    "esbuild": "^0.21.0",
+    "typescript": "^5.4.0"
+  }
+}
