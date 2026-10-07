@@ -79,6 +79,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     vscode.commands.registerCommand('jellyfin.changeServer', () => auth.signIn({ server: true })),
     vscode.commands.registerCommand('jellyfin.selectAudio', () => player.selectAudioTrack()),
     vscode.commands.registerCommand('jellyfin.selectSubtitles', () => player.selectSubtitles()),
+    vscode.commands.registerCommand('jellyfin.toggleMatchPlayerSize', () => player.toggleMatchPlayerSize()),
     vscode.commands.registerCommand('jellyfin.playPause', () => player.sendCommand('playPause')),
     vscode.commands.registerCommand('jellyfin.stop', () => player.sendCommand('stop')),
     vscode.commands.registerCommand('jellyfin.refresh', () => browse.refresh()),
@@ -87,6 +88,9 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     vscode.workspace.onDidChangeConfiguration((e) => {
       if (e.affectsConfiguration('jellyfin.serverUrl')) {
         void auth.refreshServerUrl();
+      }
+      if (e.affectsConfiguration('jellyfin.matchPlayerSize')) {
+        void player.matchPlayerSizeChanged();
       }
     }),
   );

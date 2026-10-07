@@ -214,6 +214,7 @@ export class BrowseViewProvider implements vscode.WebviewViewProvider {
       <div class="button-row">
         <button id="audio-btn" class="secondary" data-command="jellyfin.selectAudio" title="Choose the audio track">Audio</button>
         <button class="secondary" data-command="jellyfin.selectSubtitles" title="Choose subtitles or load a subtitle file">Subtitles</button>
+        <button id="match-size-btn" class="secondary" data-command="jellyfin.toggleMatchPlayerSize" aria-pressed="false" title="Have the server scale the video down to the size of the player. Saves bandwidth; the server has to re-encode the video.">Fit size</button>
         <button class="secondary" data-command="jellyfin.stop" title="Stop and close the video">Stop</button>
       </div>
     </div>

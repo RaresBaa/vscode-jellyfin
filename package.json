@@ -90,6 +90,10 @@
         "title": "Jellyfin: Select Subtitles"
       },
       {
+        "command": "jellyfin.toggleMatchPlayerSize",
+        "title": "Jellyfin: Toggle Match Video Resolution to Player Size"
+      },
+      {
         "command": "jellyfin.switchUser",
         "title": "Jellyfin: Switch User"
       },
@@ -130,6 +134,10 @@
       {
         "command": "jellyfin.selectSubtitles",
         "key": "ctrl+alt+j c"
+      },
+      {
+        "command": "jellyfin.toggleMatchPlayerSize",
+        "key": "ctrl+alt+j r"
       }
     ],
     "configuration": {
@@ -144,6 +152,11 @@
           "type": "string",
           "default": "",
           "description": "Jellyfin username. Password is requested on sign-in and stored securely, never in settings."
+        },
+        "jellyfin.matchPlayerSize": {
+          "type": "boolean",
+          "default": false,
+          "description": "Have the server scale video down to the size of the player view, and again when the view is resized. Saves bandwidth, but the server has to re-encode video it could otherwise send untouched."
         }
       }
     },
@@ -170,9 +183,14 @@
           "group": "1_tracks@2"
         },
         {
-          "command": "jellyfin.stop",
+          "command": "jellyfin.toggleMatchPlayerSize",
           "when": "view == jellyfin.playerView",
           "group": "1_tracks@3"
+        },
+        {
+          "command": "jellyfin.stop",
+          "when": "view == jellyfin.playerView",
+          "group": "1_tracks@4"
         },
         {
           "command": "jellyfin.hide",

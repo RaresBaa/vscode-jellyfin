@@ -188,6 +188,7 @@
           $('now-title').textContent = msg.nowPlaying.title;
           $('now-title').title = msg.nowPlaying.title;
           $('audio-btn').disabled = msg.nowPlaying.audioTrackCount < 2;
+          $('match-size-btn').setAttribute('aria-pressed', String(msg.nowPlaying.matchPlayerSize));
         }
         break;
       case 'refresh':

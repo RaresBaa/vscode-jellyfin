@@ -180,6 +180,29 @@
     button.addEventListener('click', () => vscode.postMessage({ type: 'command', command: button.dataset.command }));
   }
 
+  // ---- Size ---------------------------------------------------------------
+
+  const RESIZE_SETTLE_MS = 1500;
+  let resizeTimer;
+
+  /** How many screen pixels wide the picture can be drawn, which is all the resolution worth streaming. */
+  function pictureWidth() {
+    const fullscreen = Boolean(document.fullscreenElement);
+    const width = fullscreen ? screen.width : window.innerWidth;
+    const height = fullscreen ? screen.height : window.innerHeight;
+    const aspect = video.videoWidth && video.videoHeight ? video.videoWidth / video.videoHeight : 16 / 9;
+    return Math.round(Math.min(width, height * aspect) * window.devicePixelRatio);
+  }
+
+  // A change of size can mean a new stream, so wait until the view has stopped being dragged.
+  function reportSize() {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(() => vscode.postMessage({ type: 'size', pictureWidth: pictureWidth() }), RESIZE_SETTLE_MS);
+  }
+
+  window.addEventListener('resize', reportSize);
+  document.addEventListener('fullscreenchange', reportSize);
+
   // ---- Capabilities -------------------------------------------------------
 
   // A tenth of a second of silence in formats that VS Code says it can play but, in Microsoft's
@@ -352,6 +375,7 @@
     const probed = { aac, opus, mkv };
     vscode.postMessage({
       type: 'ready',
+      pictureWidth: pictureWidth(),
       deviceProfile: buildDeviceProfile(probed, false),
       compatibleProfile: buildDeviceProfile(probed, true),
     });

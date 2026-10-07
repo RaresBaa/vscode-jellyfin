@@ -22,10 +22,19 @@ function toWebVtt(text: string): string {
   return `WEBVTT\n\n${body.replace(/(\d{2}:\d{2}:\d{2}),(\d{3})/g, '$1.$2')}`;
 }
 
+/**
+ * Widths the server may be asked to scale video down to. Steps rather than the exact size of the
+ * view, because every change of width means a new stream.
+ */
+const WIDTH_STEPS = [426, 640, 854, 1280, 1920, 2560, 3840];
+
+const MATCH_SIZE_SETTING = 'matchPlayerSize';
+
 /** What the library view shows about the item in the player. */
 export interface NowPlaying {
   title: string;
   audioTrackCount: number;
+  matchPlayerSize: boolean;
 }
 
 interface TrackPick extends vscode.QuickPickItem {
@@ -43,6 +52,8 @@ export class PlayerViewProvider implements vscode.WebviewViewProvider {
   private subtitleTracks: SubtitleTrack[] = [];
   private deviceProfile: unknown;
   private compatibleProfile: unknown;
+  /** How many screen pixels wide the view can draw the picture. */
+  private pictureWidth: number | undefined;
   private onReady: Array<() => void> = [];
   private onUnloaded: Array<(positionTicks: unknown) => void> = [];
   private readonly stopEmitter = new vscode.EventEmitter<void>();
@@ -103,7 +114,12 @@ export class PlayerViewProvider implements vscode.WebviewViewProvider {
       }
       // Text subtitles are drawn by the player, so the server is only told about the ones it must draw itself.
       const chosen = this.subtitleTracks.find((track) => track.index === options.subtitleIndex);
-      const serverOptions = chosen?.url || options.subtitleIndex === LOCAL_SUBTITLE ? { ...options, subtitleIndex: -1 } : options;
+      const maxWidth = this.widthLimit();
+      const serverOptions = {
+        ...options,
+        maxWidth,
+        ...(chosen?.url || options.subtitleIndex === LOCAL_SUBTITLE ? { subtitleIndex: -1 } : {}),
+      };
       await this.stop();
 
       const item = await client.getItem(userId, itemId);
@@ -121,6 +137,8 @@ export class PlayerViewProvider implements vscode.WebviewViewProvider {
         compatible: Boolean(options.compatible),
         audioIndex: streamInfo.audioIndex,
         subtitleIndex: options.subtitleIndex ?? streamInfo.subtitleIndex,
+        maxWidth,
+        videoWidth: streamInfo.videoWidth,
       };
       this.audioTracks = streamInfo.audioTracks;
       this.subtitleTracks = streamInfo.subtitleTracks;
@@ -135,6 +153,7 @@ export class PlayerViewProvider implements vscode.WebviewViewProvider {
       this.setNowPlaying({
         title: item.SeriesName ? `${item.SeriesName} — ${item.Name}` : item.Name,
         audioTrackCount: streamInfo.audioTracks.length,
+        matchPlayerSize: this.matchPlayerSize,
       });
       await this.showSubtitle(this.session.subtitleIndex);
     } catch (err) {
@@ -296,6 +315,44 @@ export class PlayerViewProvider implements vscode.WebviewViewProvider {
     }
   }
 
+  private get matchPlayerSize(): boolean {
+    return vscode.workspace.getConfiguration('jellyfin').get<boolean>(MATCH_SIZE_SETTING, false);
+  }
+
+  async toggleMatchPlayerSize(): Promise<void> {
+    await vscode.workspace
+      .getConfiguration('jellyfin')
+      .update(MATCH_SIZE_SETTING, !this.matchPlayerSize, vscode.ConfigurationTarget.Global);
+  }
+
+  /** Call when the setting changed, to pass it on to the library view and the playing stream. */
+  async matchPlayerSizeChanged(): Promise<void> {
+    if (this.current) {
+      this.setNowPlaying({ ...this.current, matchPlayerSize: this.matchPlayerSize });
+    }
+    await this.applyWidthLimit();
+  }
+
+  /** The width to ask the server for: the first step that fills the view, or nothing to leave video as it is. */
+  private widthLimit(): number | undefined {
+    const width = this.pictureWidth;
+    return this.matchPlayerSize && width ? WIDTH_STEPS.find((step) => step >= width) : undefined;
+  }
+
+  /** Requests the stream again when the view now calls for a different width than it is playing at. */
+  private async applyWidthLimit(): Promise<void> {
+    const session = this.session;
+    if (!session || this.restarting) {
+      return;
+    }
+    // A limit the video is already within changes nothing, and neither does one on an item without video.
+    const effective = (limit: number | undefined) =>
+      limit !== undefined && limit < (session.videoWidth ?? 0) ? limit : undefined;
+    if (effective(this.widthLimit()) !== effective(session.maxWidth)) {
+      await this.restart({});
+    }
+  }
+
   private setNowPlaying(nowPlaying: NowPlaying | undefined): void {
     this.current = nowPlaying;
     this.nowPlayingEmitter.fire(nowPlaying);
@@ -336,6 +393,7 @@ export class PlayerViewProvider implements vscode.WebviewViewProvider {
       case 'ready':
         this.deviceProfile = msg.deviceProfile ?? {};
         this.compatibleProfile = msg.compatibleProfile ?? this.deviceProfile;
+        this.setPictureWidth(msg.pictureWidth);
         this.onReady.splice(0).forEach((resolve) => resolve());
         this.post({ type: 'state', signedIn: this.auth.isSignedIn() });
         break;
@@ -343,6 +401,10 @@ export class PlayerViewProvider implements vscode.WebviewViewProvider {
         if (typeof msg.command === 'string' && msg.command.startsWith('jellyfin.')) {
           await vscode.commands.executeCommand(msg.command);
         }
+        break;
+      case 'size':
+        this.setPictureWidth(msg.pictureWidth);
+        await this.applyWidthLimit();
         break;
       case 'unloaded':
         this.onUnloaded.splice(0).forEach((resolve) => resolve(msg.positionTicks));
@@ -359,6 +421,13 @@ export class PlayerViewProvider implements vscode.WebviewViewProvider {
       case 'playbackEvent':
         await this.handlePlaybackEvent(msg);
         break;
+    }
+  }
+
+  private setPictureWidth(width: unknown): void {
+    // A collapsed view reports no width; the last real one still describes it best.
+    if (typeof width === 'number' && width > 0) {
+      this.pictureWidth = width;
     }
   }
 

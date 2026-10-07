@@ -45,6 +45,7 @@ existing bindings. Rebind any of them via `Preferences: Open Keyboard Shortcuts`
 | Jellyfin: Stop | `ctrl+alt+j x` | saves the position and closes the video |
 | Jellyfin: Select Audio Track | `ctrl+alt+j a` | |
 | Jellyfin: Select Subtitles | `ctrl+alt+j c` | pick a track, turn them off, or load a `.srt`/`.vtt` file |
+| Jellyfin: Toggle Match Video Resolution to Player Size | `ctrl+alt+j r` | see [Matching the player's size](#matching-the-players-size) |
 | Jellyfin: Switch User | — | |
 | Jellyfin: Change Server | — | |
 | Jellyfin: Refresh | — | reloads the library view |
@@ -70,8 +71,22 @@ If a file that was expected to play fails anyway, the player retries it as a
 transcode.
 
 While something is playing, the bottom of the library view shows its title with
-**Audio**, **Subtitles** and **Stop** buttons (the same actions are in the player
-view's `…` menu and the Command Palette). The player view itself is only the video.
+**Audio**, **Subtitles**, **Fit size** and **Stop** buttons (the same actions are in
+the player view's `…` menu and the Command Palette). The player view itself is only the video.
+
+### Matching the player's size
+
+A 1080p stream shown in a narrow side bar is mostly wasted bandwidth. With **Fit size**
+on (the `jellyfin.matchPlayerSize` setting, off by default), the server scales video
+down to the size the player view is drawn at, counting the display's pixel density.
+
+- Sizes go in steps (426, 640, 854, 1280, 1920, 2560, 3840 pixels wide), and video is
+  never scaled up: a view wider than the video gets the video as it is.
+- Resizing the view, or going fullscreen, into a different step restarts the stream at
+  the same position once the size has been still for a moment.
+- Scaled video has to be re-encoded by the server, where it would otherwise be sent
+  untouched. Leave this off for a server without hardware transcoding, or on a fast
+  local network.
 
 - **Subtitles** lists the item's subtitle tracks, plus **Off** and **Load subtitle
   file…** for a `.srt` or `.vtt` on your computer. Text tracks (SRT, ASS, …) are

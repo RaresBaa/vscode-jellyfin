@@ -168,11 +168,22 @@ export class JellyfinClient {
     options: StreamOptions,
   ): Promise<StreamInfo> {
     const forceTranscode = Boolean(options.forceTranscode || options.compatible);
+    let profile = deviceProfile as { CodecProfiles?: unknown[] } | undefined;
+    if (options.maxWidth !== undefined) {
+      // Wider video then fails this condition, so the server transcodes it, scaled down to fit.
+      const narrow = {
+        Type: 'Video',
+        Conditions: [
+          { Condition: 'LessThanEqual', Property: 'Width', Value: String(options.maxWidth), IsRequired: false },
+        ],
+      };
+      profile = { ...profile, CodecProfiles: [...(profile?.CodecProfiles ?? []), narrow] };
+    }
     const info = await this.request<PlaybackInfo>(`/Items/${item.Id}/PlaybackInfo?UserId=${userId}`, {
       method: 'POST',
       body: {
         UserId: userId,
-        DeviceProfile: deviceProfile,
+        DeviceProfile: profile,
         MaxStreamingBitrate: MAX_STREAMING_BITRATE,
         AutoOpenLiveStream: true,
         EnableDirectPlay: !forceTranscode,
@@ -230,6 +241,7 @@ export class JellyfinClient {
         })),
       audioIndex: options.audioIndex ?? source.DefaultAudioStreamIndex,
       subtitleIndex: options.subtitleIndex ?? source.DefaultSubtitleStreamIndex ?? -1,
+      videoWidth: streams.find((stream) => stream.Type === 'Video')?.Width,
     };
   }
 

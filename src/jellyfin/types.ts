@@ -41,6 +41,7 @@ export interface MediaStream {
   DisplayTitle?: string;
   Language?: string;
   Codec?: string;
+  Width?: number;
   DeliveryMethod?: string;
   DeliveryUrl?: string;
 }
@@ -86,6 +87,8 @@ export interface StreamOptions {
   audioIndex?: number;
   /** -1 turns subtitles off. */
   subtitleIndex?: number;
+  /** Have the server scale wider video down to this many pixels. */
+  maxWidth?: number;
 }
 
 export interface StreamInfo {
@@ -97,6 +100,8 @@ export interface StreamInfo {
   subtitleTracks: SubtitleTrack[];
   audioIndex: number | undefined;
   subtitleIndex: number;
+  /** Width of the stored video; undefined for audio. */
+  videoWidth: number | undefined;
 }
 
 export interface PlaybackSession {
@@ -110,4 +115,7 @@ export interface PlaybackSession {
   audioIndex: number | undefined;
   /** -1 when subtitles are off. */
   subtitleIndex: number;
+  /** The width limit the stream was requested with. */
+  maxWidth: number | undefined;
+  videoWidth: number | undefined;
 }

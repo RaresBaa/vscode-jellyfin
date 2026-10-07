@@ -198,6 +198,11 @@ h3 {
   padding: 2px 10px;
 }
 
+#now-playing button[aria-pressed='true'] {
+  color: var(--vscode-button-foreground);
+  background-color: var(--vscode-button-background);
+}
+
 button.link {
   color: var(--vscode-textLink-foreground);
   background: none;
