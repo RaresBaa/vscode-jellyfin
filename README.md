@@ -1,6 +1,14 @@
-# Jellyfin for VS Code
+# Jellyfin Player for VS Code
 
-A small Jellyfin client inside VS Code, in two views:
+An unofficial [Jellyfin](https://jellyfin.org) client inside VS Code. It is not affiliated
+with or endorsed by the Jellyfin project.
+
+> **Before you install:** Microsoft's VS Code builds cannot decode AAC or Opus audio, HEVC
+> video, or MKV/WebM files. The extension detects this and has your Jellyfin server convert
+> what is needed, so playback works, but most items are transcoded by the server (usually
+> only the audio). See [Playback](#playback).
+
+It has two views:
 
 - **Jellyfin** (activity bar icon) — the library: Continue Watching, Next Up, your
   libraries, Recently Added, folder/series browsing and search.
@@ -18,10 +26,8 @@ remote and reaches the Jellyfin server from your own network.
 
 ## Setup
 
-1. `npm install`
-2. `npm run compile` (or `npm run watch` while developing)
-3. Press `F5` to launch an Extension Development Host.
-4. Click the **Jellyfin** icon in the activity bar and choose **Sign In**.
+Click the **Jellyfin** icon in the activity bar and choose **Sign In**, then enter your
+server's address, your username and your password.
 
 Server URL and username are stored as regular settings (`jellyfin.serverUrl`,
 `jellyfin.username`), editable from the Settings UI. Only the access token is kept,
@@ -114,3 +120,13 @@ position and watched status update the way they do with official clients.
 - Transcoding needs the HLS support built into recent VS Code versions (the player
   uses Chromium's native HLS). On older versions only directly playable files work.
 - No quality picker and no next-episode queue.
+
+## Building from source
+
+1. `npm install`
+2. `npm run compile` (or `npm run watch` while developing)
+3. Press `F5` to launch an Extension Development Host.
+
+## License
+
+[MIT](LICENSE)

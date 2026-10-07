@@ -10,7 +10,7 @@ import type {
 } from './types';
 
 const CLIENT_NAME = 'vscode-jellyfin';
-const CLIENT_VERSION = '0.0.1';
+const CLIENT_VERSION = '0.1.0';
 const DEVICE_NAME = 'VS Code';
 const MAX_STREAMING_BITRATE = 120_000_000;
 const PAGE_SIZE = 100;

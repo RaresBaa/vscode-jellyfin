@@ -4,3 +4,6 @@ src/**
 esbuild.js
 tsconfig.json
 *.map
+node_modules/**
+package-lock.json
+media/marketplace-icon.svg

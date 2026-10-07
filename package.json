@@ -1,10 +1,25 @@
 {
   "name": "vscode-jellyfin",
-  "displayName": "Jellyfin",
-  "description": "A small Jellyfin media client docked inside VS Code, with play/pause/show/hide shortcuts.",
-  "version": "0.0.1",
-  "publisher": "local",
-  "private": true,
+  "displayName": "Jellyfin Player (unofficial)",
+  "description": "Browse and play your Jellyfin library in a VS Code side bar view. Not affiliated with the Jellyfin project.",
+  "version": "0.1.0",
+  "publisher": "RaresBaa",
+  "license": "MIT",
+  "icon": "media/icon.png",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/RaresBaa/vscode-jellyfin.git"
+  },
+  "bugs": {
+    "url": "https://github.com/RaresBaa/vscode-jellyfin/issues"
+  },
+  "keywords": [
+    "jellyfin",
+    "media",
+    "video",
+    "player",
+    "streaming"
+  ],
   "engines": {
     "vscode": "^1.85.0"
   },
