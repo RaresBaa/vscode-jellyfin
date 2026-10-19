@@ -127,6 +127,27 @@ position and watched status update the way they do with official clients.
 2. `npm run compile` (or `npm run watch` while developing)
 3. Press `F5` to launch an Extension Development Host.
 
+## Nix
+
+The repository is a flake:
+
+- `nix build` builds the unpacked extension, and `nix build .#vsix` the `.vsix` file.
+- `nix develop` gives a shell with Node.js and `vsce`.
+
+To install it with Home Manager:
+
+```nix
+# flake inputs
+vscode-jellyfin.url = "github:RaresBaa/vscode-jellyfin";
+
+# home configuration
+programs.vscode.profiles.default.extensions = [
+  inputs.vscode-jellyfin.packages.${pkgs.system}.default
+];
+```
+
+or without Home Manager, `pkgs.vscode-with-extensions.override { vscodeExtensions = [ … ]; }`.
+
 ## License
 
 [MIT](LICENSE)
