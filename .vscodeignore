@@ -3,7 +3,7 @@ src/**
 .gitignore
 esbuild.js
 tsconfig.json
-*.map
+**/*.map
 node_modules/**
 package-lock.json
 media/marketplace-icon.svg
