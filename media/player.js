@@ -12,6 +12,8 @@
   const PROGRESS_INTERVAL_MS = 10000;
   /** How long after a seek is settled (dragging, arrow keys) before a new stream is requested. */
   const SEEK_SETTLE_MS = 400;
+  /** How long the mouse must stay still before the control bar fades out. */
+  const CONTROLS_IDLE_MS = 2500;
   /** A stream that fails sooner than this after reconnecting isn't retried again. */
   const RECONNECT_GUARD_MS = 15000;
 
@@ -115,6 +117,7 @@
     // A continuous transcode has no length the video element knows, so its own seek bar is no use.
     video.controls = !current.seekByRestart;
     setHidden(controls, !current.seekByRestart);
+    player.classList.remove('idle');
     updateControls();
     showPlayer(true);
     video.src = msg.streamUrl;
@@ -327,6 +330,31 @@
     });
   }
   video.addEventListener('durationchange', updateControls);
+
+  // The bar sits over the picture, so it fades out while the video plays and the mouse is still.
+  let idleTimer;
+  function wakeControls() {
+    player.classList.remove('idle');
+    clearTimeout(idleTimer);
+    idleTimer = setTimeout(() => {
+      if (!video.paused && !seeking && !controls.matches(':hover, :focus-within')) {
+        player.classList.add('idle');
+      }
+    }, CONTROLS_IDLE_MS);
+  }
+  player.addEventListener('mousemove', wakeControls);
+  player.addEventListener('mouseleave', () => {
+    if (!video.paused && !seeking) {
+      clearTimeout(idleTimer);
+      player.classList.add('idle');
+    }
+  });
+  controls.addEventListener('focusin', wakeControls);
+  video.addEventListener('play', wakeControls);
+  video.addEventListener('pause', () => {
+    clearTimeout(idleTimer);
+    player.classList.remove('idle');
+  });
 
   // The native controls have their own speed menu; keep the extension's choice in step with it.
   video.addEventListener('ratechange', () => {
