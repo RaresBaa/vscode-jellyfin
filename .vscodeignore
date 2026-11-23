@@ -7,3 +7,6 @@ tsconfig.json
 node_modules/**
 package-lock.json
 media/marketplace-icon.svg
+flake.nix
+flake.lock
+.github/**
