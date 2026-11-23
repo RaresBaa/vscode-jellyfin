@@ -189,6 +189,9 @@
           $('now-title').title = msg.nowPlaying.title;
           $('audio-btn').disabled = msg.nowPlaying.audioTrackCount < 2;
           $('match-size-btn').setAttribute('aria-pressed', String(msg.nowPlaying.matchPlayerSize));
+          const speed = msg.nowPlaying.speed || 1;
+          $('speed-btn').textContent = speed === 1 ? 'Speed' : `${speed}×`;
+          $('speed-btn').setAttribute('aria-pressed', String(speed !== 1));
         }
         break;
       case 'refresh':

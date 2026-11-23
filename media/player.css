@@ -47,6 +47,64 @@ body {
   transform: translate(-50%, -50%);
 }
 
+/* Controls for transcoded streams, whose length the video element doesn't know. */
+#controls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 6px;
+  color: white;
+  background: rgba(0, 0, 0, 0.85);
+}
+
+#controls .ctl {
+  flex: none;
+  min-width: 28px;
+  padding: 2px 4px;
+  color: white;
+  background: none;
+  border: none;
+}
+
+#controls .ctl:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.ctl-time {
+  flex: none;
+  font-size: 0.9em;
+  font-variant-numeric: tabular-nums;
+}
+
+#ctl-seek {
+  flex: 1;
+  min-width: 40px;
+}
+
+#ctl-volume {
+  flex: none;
+  width: 60px;
+}
+
+/* Narrow views keep what matters for watching: play, the position and full screen. */
+@media (max-width: 300px) {
+  #ctl-duration,
+  #ctl-volume {
+    display: none;
+  }
+}
+
+#player:fullscreen {
+  display: flex;
+  flex-direction: column;
+}
+
+#player:fullscreen #video {
+  flex: 1;
+  min-height: 0;
+  max-height: none;
+}
+
 #play-btn:hover {
   background: rgba(0, 0, 0, 0.8);
 }

@@ -30,11 +30,15 @@ const WIDTH_STEPS = [426, 640, 854, 1280, 1920, 2560, 3840];
 
 const MATCH_SIZE_SETTING = 'matchPlayerSize';
 
+const SPEEDS = [0.5, 0.75, 1, 1.25, 1.5, 1.75, 2];
+
 /** What the library view shows about the item in the player. */
 export interface NowPlaying {
   title: string;
   audioTrackCount: number;
   matchPlayerSize: boolean;
+  /** Playback rate, 1 being normal speed. */
+  speed: number;
 }
 
 interface TrackPick extends vscode.QuickPickItem {
@@ -64,6 +68,8 @@ export class PlayerViewProvider implements vscode.WebviewViewProvider {
   private readonly nowPlayingEmitter = new vscode.EventEmitter<NowPlaying | undefined>();
   private current: NowPlaying | undefined;
   private restarting = false;
+  /** Kept for later items until changed, like the player's volume. */
+  private speed = 1;
 
   /** Fires when an item starts playing, and with `undefined` when the player becomes empty. */
   readonly onDidChangeNowPlaying = this.nowPlayingEmitter.event;
@@ -143,10 +149,15 @@ export class PlayerViewProvider implements vscode.WebviewViewProvider {
       this.audioTracks = streamInfo.audioTracks;
       this.subtitleTracks = streamInfo.subtitleTracks;
 
+      // A continuous transcode can't be seeked into once it plays, so the server starts it at the position.
+      const streamUrl =
+        streamInfo.seekByRestart && startTicks > 0 ? `${streamInfo.url}&StartTimeTicks=${startTicks}` : streamInfo.url;
       this.post({
         type: 'play',
-        streamUrl: streamInfo.url,
+        streamUrl,
         positionTicks: startTicks,
+        durationTicks: item.RunTimeTicks,
+        seekByRestart: streamInfo.seekByRestart,
         itemId,
         canRetry: !options.compatible,
       });
@@ -154,6 +165,7 @@ export class PlayerViewProvider implements vscode.WebviewViewProvider {
         title: item.SeriesName ? `${item.SeriesName} — ${item.Name}` : item.Name,
         audioTrackCount: streamInfo.audioTracks.length,
         matchPlayerSize: this.matchPlayerSize,
+        speed: this.speed,
       });
       await this.showSubtitle(this.session.subtitleIndex);
     } catch (err) {
@@ -230,6 +242,26 @@ export class PlayerViewProvider implements vscode.WebviewViewProvider {
       await pick.action();
     } else if (pick?.index !== undefined && pick.index !== session.subtitleIndex) {
       await this.setSubtitle(pick.index);
+    }
+  }
+
+  async selectSpeed(): Promise<void> {
+    const picks = SPEEDS.map((speed) => ({
+      label: speed === 1 ? 'Normal' : `${speed}×`,
+      description: speed === this.speed ? 'current' : undefined,
+      speed,
+    }));
+    const pick = await vscode.window.showQuickPick(picks, { placeHolder: 'Playback speed' });
+    if (pick) {
+      this.setSpeed(pick.speed);
+      this.post({ type: 'speed', speed: pick.speed });
+    }
+  }
+
+  private setSpeed(speed: number): void {
+    this.speed = speed;
+    if (this.current) {
+      this.setNowPlaying({ ...this.current, speed });
     }
   }
 
@@ -396,6 +428,13 @@ export class PlayerViewProvider implements vscode.WebviewViewProvider {
         this.setPictureWidth(msg.pictureWidth);
         this.onReady.splice(0).forEach((resolve) => resolve());
         this.post({ type: 'state', signedIn: this.auth.isSignedIn() });
+        this.post({ type: 'speed', speed: this.speed });
+        break;
+      case 'speed':
+        // Changed from the video's own menu.
+        if (typeof msg.speed === 'number' && msg.speed > 0 && msg.speed !== this.speed) {
+          this.setSpeed(msg.speed);
+        }
         break;
       case 'command':
         if (typeof msg.command === 'string' && msg.command.startsWith('jellyfin.')) {
@@ -408,6 +447,12 @@ export class PlayerViewProvider implements vscode.WebviewViewProvider {
         break;
       case 'unloaded':
         this.onUnloaded.splice(0).forEach((resolve) => resolve(msg.positionTicks));
+        break;
+      case 'seek':
+        // The player only asks for this when the position can't be reached in the stream it has.
+        if (typeof msg.positionTicks === 'number' && msg.itemId === this.session?.itemId) {
+          await this.restart({}, msg.positionTicks);
+        }
         break;
       case 'retryTranscode': {
         // First fall back from the original file to a transcode, then to the most compatible transcode.
@@ -494,6 +539,15 @@ export class PlayerViewProvider implements vscode.WebviewViewProvider {
   <div id="player" class="hidden">
     <video id="video" controls controlslist="nodownload"></video>
     <button id="play-btn" class="hidden" title="Play" aria-label="Play">▶</button>
+    <div id="controls" class="hidden">
+      <button id="ctl-play" class="ctl" title="Play" aria-label="Play">▶</button>
+      <span id="ctl-time" class="ctl-time">0:00</span>
+      <input id="ctl-seek" type="range" min="0" max="0" step="1" value="0" aria-label="Seek" />
+      <span id="ctl-duration" class="ctl-time">0:00</span>
+      <button id="ctl-mute" class="ctl" title="Mute" aria-label="Mute">🔊</button>
+      <input id="ctl-volume" type="range" min="0" max="1" step="0.05" value="1" aria-label="Volume" />
+      <button id="ctl-fullscreen" class="ctl" title="Full screen" aria-label="Full screen">⛶</button>
+    </div>
   </div>
   <div id="player-error" class="hidden"></div>`,
     );

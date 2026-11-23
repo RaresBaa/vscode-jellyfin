@@ -79,6 +79,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     vscode.commands.registerCommand('jellyfin.changeServer', () => auth.signIn({ server: true })),
     vscode.commands.registerCommand('jellyfin.selectAudio', () => player.selectAudioTrack()),
     vscode.commands.registerCommand('jellyfin.selectSubtitles', () => player.selectSubtitles()),
+    vscode.commands.registerCommand('jellyfin.selectSpeed', () => player.selectSpeed()),
     vscode.commands.registerCommand('jellyfin.toggleMatchPlayerSize', () => player.toggleMatchPlayerSize()),
     vscode.commands.registerCommand('jellyfin.playPause', () => player.sendCommand('playPause')),
     vscode.commands.registerCommand('jellyfin.stop', () => player.sendCommand('stop')),

@@ -2,7 +2,7 @@
   "name": "vscode-jellyfin",
   "displayName": "Jellyfin Player (unofficial)",
   "description": "Browse and play your Jellyfin library in a VS Code side bar view. Not affiliated with the Jellyfin project.",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "publisher": "RaresBaa",
   "license": "MIT",
   "icon": "media/icon.png",
@@ -27,8 +27,7 @@
     "Other"
   ],
   "extensionKind": [
-    "ui",
-    "workspace"
+    "ui"
   ],
   "main": "./out/extension.js",
   "activationEvents": [],
@@ -105,6 +104,10 @@
         "title": "Jellyfin: Select Subtitles"
       },
       {
+        "command": "jellyfin.selectSpeed",
+        "title": "Jellyfin: Playback Speed"
+      },
+      {
         "command": "jellyfin.toggleMatchPlayerSize",
         "title": "Jellyfin: Toggle Match Video Resolution to Player Size"
       },
@@ -149,6 +152,10 @@
       {
         "command": "jellyfin.selectSubtitles",
         "key": "ctrl+alt+j c"
+      },
+      {
+        "command": "jellyfin.selectSpeed",
+        "key": "ctrl+alt+j p"
       },
       {
         "command": "jellyfin.toggleMatchPlayerSize",
@@ -198,14 +205,19 @@
           "group": "1_tracks@2"
         },
         {
-          "command": "jellyfin.toggleMatchPlayerSize",
+          "command": "jellyfin.selectSpeed",
           "when": "view == jellyfin.playerView",
           "group": "1_tracks@3"
         },
         {
-          "command": "jellyfin.stop",
+          "command": "jellyfin.toggleMatchPlayerSize",
           "when": "view == jellyfin.playerView",
           "group": "1_tracks@4"
+        },
+        {
+          "command": "jellyfin.stop",
+          "when": "view == jellyfin.playerView",
+          "group": "1_tracks@5"
         },
         {
           "command": "jellyfin.hide",

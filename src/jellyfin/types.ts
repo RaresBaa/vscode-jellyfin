@@ -22,6 +22,7 @@ export interface JellyfinItem {
   IndexNumber?: number;
   ParentIndexNumber?: number;
   ProductionYear?: number;
+  RunTimeTicks?: number;
   ImageTags?: Record<string, string>;
   UserData?: {
     PlaybackPositionTicks?: number;
@@ -53,6 +54,8 @@ export interface MediaSource {
   SupportsDirectPlay?: boolean;
   SupportsDirectStream?: boolean;
   TranscodingUrl?: string;
+  /** 'hls' for a segmented stream, 'http' for one continuous download. */
+  TranscodingSubProtocol?: string;
   DefaultAudioStreamIndex?: number;
   DefaultSubtitleStreamIndex?: number;
   MediaStreams?: MediaStream[];
@@ -102,6 +105,11 @@ export interface StreamInfo {
   subtitleIndex: number;
   /** Width of the stored video; undefined for audio. */
   videoWidth: number | undefined;
+  /**
+   * A transcode sent as one continuous download. The player can't seek far in it, so the stream is
+   * requested again from the new position instead, which also means it has to be started that way.
+   */
+  seekByRestart: boolean;
 }
 
 export interface PlaybackSession {

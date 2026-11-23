@@ -51,6 +51,7 @@ existing bindings. Rebind any of them via `Preferences: Open Keyboard Shortcuts`
 | Jellyfin: Stop | `ctrl+alt+j x` | saves the position and closes the video |
 | Jellyfin: Select Audio Track | `ctrl+alt+j a` | |
 | Jellyfin: Select Subtitles | `ctrl+alt+j c` | pick a track, turn them off, or load a `.srt`/`.vtt` file |
+| Jellyfin: Playback Speed | `ctrl+alt+j p` | 0.5× to 2× |
 | Jellyfin: Toggle Match Video Resolution to Player Size | `ctrl+alt+j r` | see [Matching the player's size](#matching-the-players-size) |
 | Jellyfin: Switch User | — | |
 | Jellyfin: Change Server | — | |
@@ -63,10 +64,19 @@ position is saved to the server first and the item shows up under Continue Watch
 
 The player asks the server how to play each item (`/Items/{id}/PlaybackInfo`) and
 sends it a description of what this VS Code can decode. Files it can decode are
-streamed as they are. Everything else is sent by the server as HLS in fMP4 segments:
-H.264 and AV1 video is passed through untouched, other video is converted to H.264,
-and audio that can't be decoded here is converted to FLAC, which is lossless. If that
-stream fails to play, the player retries once with the older MPEG-TS / MP3 format.
+streamed as they are. Everything else is converted by the server: H.264 video is passed
+through untouched, other video is converted to H.264, and audio that can't be decoded
+here is converted to FLAC, which is lossless. If that stream fails to play, the player
+retries once with MP3 audio.
+
+VS Code has neither HLS nor Media Source Extensions, so a converted stream arrives as
+one continuous fragmented MP4 download over the server's normal address (HTTPS
+included). The video element can't seek in such a download, so for these items the
+player shows its own control bar, and seeking outside what it can reach asks the
+server for the stream again from the new position, the way Jellyfin's web player does.
+If a converted stream breaks off, after a long pause for example, the player picks it
+up again from where it was. In VS Code builds that do support HLS, the server sends HLS
+in fMP4 segments instead, which also lets AV1 through untouched.
 
 Microsoft's VS Code builds cannot decode AAC or Opus audio, or open MKV/WebM files,
 even though their Chromium reports that it can — a video with AAC sound plays silent
@@ -77,7 +87,7 @@ If a file that was expected to play fails anyway, the player retries it as a
 transcode.
 
 While something is playing, the bottom of the library view shows its title with
-**Audio**, **Subtitles**, **Fit size** and **Stop** buttons (the same actions are in
+**Audio**, **Subtitles**, **Speed**, **Fit size** and **Stop** buttons (the same actions are in
 the player view's `…` menu and the Command Palette). The player view itself is only the video.
 
 ### Matching the player's size
@@ -101,6 +111,9 @@ down to the size the player view is drawn at, counting the display's pixel densi
   have to be drawn onto the video by the server, which restarts the stream.
 - **Audio** switches the audio track. The player can't switch tracks inside a file,
   so the server sends the stream again with the chosen one, from the same position.
+- **Speed** plays faster or slower, from 0.5× to 2×, with the pitch of voices kept.
+  The speed stays for later items until you change it or restart VS Code; changing it
+  in the video's own menu updates it too.
 - A loaded subtitle file only applies to the video being played; nothing is uploaded
   to the server.
 
@@ -117,8 +130,10 @@ position and watched status update the way they do with official clients.
 - VS Code only lets sound start from a click inside the player view. The first video
   you pick therefore loads paused behind a play button; after you press it once,
   later videos start by themselves until the player view is closed or hidden.
-- Transcoding needs the HLS support built into recent VS Code versions (the player
-  uses Chromium's native HLS). On older versions only directly playable files work.
+- Seeking in a converted stream restarts it on the server, which takes a moment, much
+  like skipping ahead in Jellyfin's web player.
+- A reverse proxy in front of Jellyfin must not buffer whole responses (Traefik's
+  `buffering` middleware, for example), or converted streams never start.
 - No quality picker and no next-episode queue.
 
 ## Building from source

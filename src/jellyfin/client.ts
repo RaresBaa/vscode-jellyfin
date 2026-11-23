@@ -10,7 +10,7 @@ import type {
 } from './types';
 
 const CLIENT_NAME = 'vscode-jellyfin';
-const CLIENT_VERSION = '0.1.0';
+const CLIENT_VERSION = '0.1.1';
 const DEVICE_NAME = 'VS Code';
 const MAX_STREAMING_BITRATE = 120_000_000;
 const PAGE_SIZE = 100;
@@ -215,6 +215,7 @@ export class JellyfinClient {
       throw new Error('This item cannot be played or transcoded for VS Code');
     }
 
+    const seekByRestart = !direct && source.TranscodingSubProtocol !== 'hls';
     const streams = source.MediaStreams ?? [];
     const label = (stream: MediaStream, kind: string) =>
       stream.DisplayTitle ?? stream.Language ?? `${kind} ${stream.Index}`;
@@ -242,6 +243,7 @@ export class JellyfinClient {
       audioIndex: options.audioIndex ?? source.DefaultAudioStreamIndex,
       subtitleIndex: options.subtitleIndex ?? source.DefaultSubtitleStreamIndex ?? -1,
       videoWidth: streams.find((stream) => stream.Type === 'Video')?.Width,
+      seekByRestart,
     };
   }
 
